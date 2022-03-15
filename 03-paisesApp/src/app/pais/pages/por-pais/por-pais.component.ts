@@ -1,25 +1,64 @@
 import { Component } from '@angular/core';
+import { Country } from '../../interfaces/pais.interface';
 import { PaisService } from '../../services/pais.service';
 
 @Component({
   selector: 'app-por-pais',
   templateUrl: './por-pais.component.html',
-  styles: [
+  styles: [`
+    li {
+      cursor: pointer;
+    }
+  `
   ]
 })
 export class PorPaisComponent {
 
   termino: string = "";
+  hayError: boolean = false;
+  paises:Country[] = [];
+  paisesSugeridos:Country[] = [];
+  mostrarSugerencias: boolean = false;
 
   constructor( private paiseService: PaisService ) { }
 
-  buscar() {
-    console.log(this.termino);
+  buscar( termino:string ) {
+    this.mostrarSugerencias = false;
+    this.hayError = false;
+    this.termino = termino;
 
-    this.paiseService.buscarPais (this.termino)
-      .subscribe( resp => {
-        console.log(resp);
+    this.paiseService.buscarPais (termino)
+    .subscribe({
+      next: (data) => {
+        console.log(data);
+        this.paises = data;
+      },
+      error: (err) => {
+        console.log('Error');
+        console.info(err);
+        this.hayError = true;
+        this.paises = [];
       }
-        );
+    });
+  }
+
+  sugerencias( termino:string ) {
+    this.hayError = false;
+    this.termino = termino;
+    this.mostrarSugerencias = true;
+    
+    this.paiseService.buscarPais(termino)
+      .subscribe({
+        next: (paises) => {
+          this.paisesSugeridos = paises.splice(0,5);
+        },
+        error: (err) => {
+          this.paisesSugeridos = [];
+        }
+      });
+  }
+
+  buscarSugerido( termino: string) {
+    this.buscar(termino);
   }
 }
